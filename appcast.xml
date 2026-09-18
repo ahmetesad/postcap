@@ -6,6 +6,31 @@
         <description>Postcap release updates</description>
         <language>en</language>
         <item>
+            <title>1.0.7</title>
+            <pubDate>Fri, 18 Sep 2026 16:43:57 +0000</pubDate>
+            <link>https://github.com/AhmetEsad/postcap/releases/tag/v1.0.7</link>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>1.0.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[# Postcap v1.0.7
+
+Now you can preview edits before exporting (long overdue)!
+
+## What's new
+
+- Preview export speed (with pitch-preserving playback)
+- Preview selected, muted, and volume-adjusted audio tracks
+- Toggle edit previews from the playback controls
+
+## Fixes
+
+- Trim end is now respected when exporting at a different speed
+- Fixed a sidebar crash caused by playback updates
+]]></description>
+            <enclosure url="https://github.com/AhmetEsad/postcap/releases/download/v1.0.7/Postcap-v1.0.7.dmg" length="4078614" type="application/octet-stream" sparkle:edSignature="VQNGPeSPfXd28ji9QqFsaFrYzxCtFdqLH5soAebrq0a5xGtOFzqy0mb8mjP6Mev9cb3B1h4rDoEJCqn1lniHBQ=="/>
+        </item>
+        <item>
             <title>1.0.6</title>
             <pubDate>Fri, 19 Jun 2026 10:55:33 +0000</pubDate>
             <link>https://github.com/AhmetEsad/postcap/releases/tag/v1.0.6</link>
