@@ -86,15 +86,11 @@ final class FFmpegExporter: ObservableObject {
             arguments += ["-ss", formatSeconds(request.trim.start)]
         }
 
-        arguments += ["-i", request.inputURL.path]
-
         if request.trim.enabled, request.trim.end > 0 {
-            if request.trim.start > 0 {
-                arguments += ["-t", formatSeconds(request.trim.end - request.trim.start)]
-            } else {
-                arguments += ["-to", formatSeconds(request.trim.end)]
-            }
+            arguments += ["-t", formatSeconds(request.trim.end - request.trim.start)]
         }
+
+        arguments += ["-i", request.inputURL.path]
 
         var videoFilters: [String] = []
         if request.crop.enabled {
