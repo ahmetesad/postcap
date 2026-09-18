@@ -13,11 +13,20 @@ final class AppModel: ObservableObject {
     @Published var videoInfo: VideoInfo?
     @Published var crop = CropSettings()
     @Published var outputSize = OutputSizeSettings()
-    @Published var trim = TrimSettings()
-    @Published var audioSettings: [Int: AudioTrackSettings] = [:]
+    @Published var trim = TrimSettings() {
+        didSet { applyPreviewSettings() }
+    }
+    @Published var audioSettings: [Int: AudioTrackSettings] = [:] {
+        didSet { applyPreviewSettings() }
+    }
     @Published var encoder: VideoEncoder = .h264VideoToolbox
     @Published var bitrate = ""
-    @Published var exportSpeed = 1.0
+    @Published var exportSpeed = 1.0 {
+        didSet { applyPreviewSettings() }
+    }
+    @Published var previewsExportSettings = true {
+        didSet { applyPreviewSettings() }
+    }
     @Published var errorMessage: String?
     @Published var availableEncoders: Set<VideoEncoder> = []
     @Published var isAnalyzing = false
@@ -38,6 +47,7 @@ final class AppModel: ObservableObject {
     let exporter = FFmpegExporter()
     private var playbackTimeObserver: Any?
     private weak var observedPlayer: AVPlayer?
+    private var previewAudioTrackIDs: [Int: CMPersistentTrackID] = [:]
 
     var canExport: Bool {
         inputURL != nil && videoInfo != nil && outputURL != nil && pathsStore.isConfigured && !exporter.isExporting
@@ -72,8 +82,6 @@ final class AppModel: ObservableObject {
         do {
             let info = try await VideoAnalyzer(ffprobePath: pathsStore.ffprobePath).getVideoInfo(fileURL: url)
             inputURL = url
-            player = AVPlayer(url: url)
-            installPlaybackObserver()
             videoInfo = info
             outputURL = defaultOutputURL(for: url, encoder: encoder)
             crop = CropSettings(x: 0, y: 0, width: info.width, height: info.height, enabled: false)
@@ -84,6 +92,17 @@ final class AppModel: ObservableObject {
             waveforms = [:]
             playbackSeconds = 0
             isPlaying = false
+
+            if let preview = try? await PreviewPlayerBuilder.build(for: url) {
+                player = preview.player
+                previewAudioTrackIDs = preview.audioTrackIDs
+            } else {
+                player = AVPlayer(url: url)
+                previewAudioTrackIDs = [:]
+            }
+
+            applyPreviewSettings()
+            installPlaybackObserver()
             generateWaveformsIfNeeded()
         } catch {
             errorMessage = error.localizedDescription
@@ -231,6 +250,11 @@ final class AppModel: ObservableObject {
     func togglePlayback() {
         guard let player else { return }
         if player.rate == 0 {
+            if previewsExportSettings, trim.enabled,
+               playbackSeconds < trim.start || playbackSeconds >= trim.end {
+                seek(to: trim.start)
+            }
+            player.defaultRate = previewPlaybackRate
             player.play()
             isPlaying = true
         } else {
@@ -280,6 +304,46 @@ final class AppModel: ObservableObject {
                 playbackSeconds = time.seconds.isFinite ? time.seconds : 0
                 isPlaying = player?.rate != 0
             }
+        }
+    }
+
+    private var previewPlaybackRate: Float {
+        guard previewsExportSettings, exportSpeed.isFinite, exportSpeed > 0 else { return 1 }
+        return Float(min(exportSpeed, Double(Float.greatestFiniteMagnitude)))
+    }
+
+    private func applyPreviewSettings() {
+        guard let player, let item = player.currentItem else { return }
+
+        item.audioTimePitchAlgorithm = .spectral
+        item.forwardPlaybackEndTime = previewsExportSettings && trim.enabled
+            ? CMTime(seconds: trim.end, preferredTimescale: 600)
+            : .invalid
+
+        if previewsExportSettings, trim.enabled, player.rate != 0,
+           playbackSeconds < trim.start || playbackSeconds >= trim.end {
+            seek(to: trim.start)
+        }
+
+        if previewsExportSettings, !previewAudioTrackIDs.isEmpty {
+            let mix = AVMutableAudioMix()
+            mix.inputParameters = previewAudioTrackIDs.sorted { $0.key < $1.key }.map { trackIndex, trackID in
+                let settings = audioSettings[trackIndex, default: AudioTrackSettings()]
+                let parameters = AVMutableAudioMixInputParameters()
+                parameters.trackID = trackID
+                parameters.audioTimePitchAlgorithm = .spectral
+                parameters.setVolume(settings.isIncluded ? Float(max(settings.volume, 0)) : 0, at: .zero)
+                return parameters
+            }
+            item.audioMix = mix
+        } else {
+            item.audioMix = nil
+        }
+
+        let wasPlaying = player.rate != 0
+        player.defaultRate = previewPlaybackRate
+        if wasPlaying {
+            player.rate = previewPlaybackRate
         }
     }
 

@@ -334,6 +334,12 @@ private struct PlaybackControlsView: View {
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
                 .frame(width: 48, alignment: .leading)
+
+            Toggle("Preview edits", isOn: $model.previewsExportSettings)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .fixedSize()
+                .help("Preview trim, speed, and audio settings")
         }
         .buttonStyle(.borderless)
         .controlSize(.large)

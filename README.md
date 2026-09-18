@@ -48,6 +48,7 @@ For development, open `postcap.xcodeproj` in Xcode and run the `postcap` scheme.
 - Generate waveforms automatically for short videos or manually from settings
 - Include, remove, mute, or adjust volume for individual audio tracks
 - Mix selected audio tracks into one output track for compatibility with messaging and social platforms
+- Preview trim, speed, selected audio tracks, and track volumes with native AVFoundation playback
 - Export with available ffmpeg encoders, including VideoToolbox, ProRes, and software encoders when present in the local ffmpeg build
 - Update automatically
 
