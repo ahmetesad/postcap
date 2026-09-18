@@ -6,19 +6,10 @@ struct EditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            List(selection: Binding<InspectorTab?>(
-                get: { selectedTab },
-                set: { if let tab = $0 { selectedTab = tab } }
-            )) {
-                ForEach(InspectorTab.allCases) { tab in
-                    Label(tab.title, systemImage: tab.systemImage)
-                        .tag(Optional(tab))
-                }
+            InspectorNavigationView(selectedTab: selectedTab) { tab in
+                selectedTab = tab
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
-            .frame(height: 108)
-            .padding(.top, 8)
+            .equatable()
 
             Divider()
 
@@ -44,7 +35,32 @@ struct EditorView: View {
     }
 }
 
-enum InspectorTab: CaseIterable, Identifiable {
+private struct InspectorNavigationView: View, Equatable {
+    var selectedTab: InspectorTab
+    var onSelect: (InspectorTab) -> Void
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.selectedTab == rhs.selectedTab
+    }
+
+    var body: some View {
+        List(selection: Binding<InspectorTab?>(
+            get: { selectedTab },
+            set: { if let tab = $0 { onSelect(tab) } }
+        )) {
+            ForEach(InspectorTab.allCases) { tab in
+                Label(tab.title, systemImage: tab.systemImage)
+                    .tag(tab)
+            }
+        }
+        .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
+        .frame(height: 108)
+        .padding(.top, 8)
+    }
+}
+
+enum InspectorTab: CaseIterable, Hashable, Identifiable {
     case edit
     case settings
     case ffmpeg
