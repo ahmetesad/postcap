@@ -6,6 +6,25 @@
         <description>Postcap release updates</description>
         <language>en</language>
         <item>
+            <title>1.0.8</title>
+            <pubDate>Sat, 17 Oct 2026 23:34:43 +0000</pubDate>
+            <link>https://github.com/AhmetEsad/postcap/releases/tag/v1.0.8</link>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>1.0.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[# Postcap v1.0.8
+
+small quality of life update
+
+## Fixes
+
+- Pressing Return, Escape, or clicking away now unfocuses input fields
+- Fixed `I`/`O` sometimes jumping to a trim point instead of setting it
+]]></description>
+            <enclosure url="https://github.com/AhmetEsad/postcap/releases/download/v1.0.8/Postcap-v1.0.8.dmg" length="4100004" type="application/octet-stream" sparkle:edSignature="T+kF7qUhiv+9AN7MeE+0smZ/GBNpREUx07RJTxRMqnWsM4e85l5e7PtcWe5mlBmgYrNCWjj4Irbmyd9cGxRHAA=="/>
+        </item>
+        <item>
             <title>1.0.7</title>
             <pubDate>Fri, 18 Sep 2026 16:43:57 +0000</pubDate>
             <link>https://github.com/AhmetEsad/postcap/releases/tag/v1.0.7</link>
