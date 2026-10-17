@@ -269,15 +269,21 @@ final class AppModel: ObservableObject {
 
     func setTrimStartToPlayhead() {
         guard let videoInfo else { return }
-        trim.enabled = true
-        let end = trim.end > 0 ? trim.end : videoInfo.duration
-        trim.start = min(max(playbackSeconds, 0), max(end - 0.1, 0))
+        let playhead = playbackSeconds
+        var updatedTrim = trim
+        let end = updatedTrim.end > 0 ? updatedTrim.end : videoInfo.duration
+        updatedTrim.start = min(max(playhead, 0), max(end - 0.1, 0))
+        updatedTrim.enabled = true
+        trim = updatedTrim
     }
 
     func setTrimEndToPlayhead() {
         guard let videoInfo else { return }
-        trim.enabled = true
-        trim.end = min(max(playbackSeconds, trim.start + 0.1), videoInfo.duration)
+        let playhead = playbackSeconds
+        var updatedTrim = trim
+        updatedTrim.end = min(max(playhead, updatedTrim.start + 0.1), videoInfo.duration)
+        updatedTrim.enabled = true
+        trim = updatedTrim
     }
 
     func goToTrimStart() {
