@@ -1,8 +1,10 @@
+import AppKit
 import SwiftUI
 
 struct EditorView: View {
     @ObservedObject var model: AppModel
     @Binding var selectedTab: InspectorTab
+    @FocusState private var textFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,9 +19,9 @@ struct EditorView: View {
                 Group {
                     switch selectedTab {
                     case .edit:
-                        EditInspectorContent(model: model)
+                        EditInspectorContent(model: model, textFieldFocus: $textFieldFocused)
                     case .settings:
-                        WaveformSettingsSection(model: model)
+                        WaveformSettingsSection(model: model, textFieldFocus: $textFieldFocused)
                     case .ffmpeg:
                         VStack(alignment: .leading, spacing: 18) {
                             BinarySettingsView(model: model)
@@ -31,7 +33,20 @@ struct EditorView: View {
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .background {
+            FocusDismissalView {
+                textFieldFocused = false
+            }
+        }
+        .onExitCommand {
+            dismissTextFieldFocus()
+        }
         .onAppear { model.refreshEncoders() }
+    }
+
+    private func dismissTextFieldFocus() {
+        textFieldFocused = false
+        NSApp.keyWindow?.makeFirstResponder(nil)
     }
 }
 
@@ -92,15 +107,16 @@ enum InspectorTab: CaseIterable, Hashable, Identifiable {
 
 private struct EditInspectorContent: View {
     @ObservedObject var model: AppModel
+    var textFieldFocus: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ImportSection(model: model)
 
             if let info = model.videoInfo {
-                VideoSettingsSection(model: model, info: info)
+                VideoSettingsSection(model: model, info: info, textFieldFocus: textFieldFocus)
                 AudioSection(model: model, info: info)
-                ExportSection(model: model)
+                ExportSection(model: model, textFieldFocus: textFieldFocus)
             }
 
             if let error = model.errorMessage {
@@ -151,6 +167,7 @@ private struct ImportSection: View {
 private struct VideoSettingsSection: View {
     @ObservedObject var model: AppModel
     var info: VideoInfo
+    var textFieldFocus: FocusState<Bool>.Binding
     @State private var cropControlsExpanded = false
 
     var body: some View {
@@ -159,11 +176,11 @@ private struct VideoSettingsSection: View {
 
             if model.trim.enabled {
                 HStack {
-                    NumberField(title: "Start", value: $model.trim.start, range: 0...info.duration)
+                    NumberField(title: "Start", value: $model.trim.start, range: 0...info.duration, textFieldFocus: textFieldFocus)
                         .onChange(of: model.trim.start) { _, newValue in
                             model.seek(to: newValue)
                         }
-                    NumberField(title: "End", value: $model.trim.end, range: 0...info.duration)
+                    NumberField(title: "End", value: $model.trim.end, range: 0...info.duration, textFieldFocus: textFieldFocus)
                         .onChange(of: model.trim.end) { _, newValue in
                             model.seek(to: newValue)
                         }
@@ -189,10 +206,10 @@ private struct VideoSettingsSection: View {
 
                 DisclosureGroup("Coordinates", isExpanded: $cropControlsExpanded) {
                     VStack(alignment: .leading, spacing: 12) {
-                        CropControlRow(title: "X1", value: x1Binding, range: 0...max(x2 - 32, 0))
-                        CropControlRow(title: "Y1", value: y1Binding, range: 0...max(y2 - 32, 0))
-                        CropControlRow(title: "X2", value: x2Binding, range: min(info.width, model.crop.x + 32)...info.width)
-                        CropControlRow(title: "Y2", value: y2Binding, range: min(info.height, model.crop.y + 32)...info.height)
+                        CropControlRow(title: "X1", value: x1Binding, range: 0...max(x2 - 32, 0), textFieldFocus: textFieldFocus)
+                        CropControlRow(title: "Y1", value: y1Binding, range: 0...max(y2 - 32, 0), textFieldFocus: textFieldFocus)
+                        CropControlRow(title: "X2", value: x2Binding, range: min(info.width, model.crop.x + 32)...info.width, textFieldFocus: textFieldFocus)
+                        CropControlRow(title: "Y2", value: y2Binding, range: min(info.height, model.crop.y + 32)...info.height, textFieldFocus: textFieldFocus)
                     }
                     .padding(.top, 8)
                 }
@@ -203,11 +220,11 @@ private struct VideoSettingsSection: View {
 
             if model.outputSize.enabled {
                 HStack(alignment: .bottom, spacing: 8) {
-                    IntegerField(title: "Width", value: $model.outputSize.width)
+                    IntegerField(title: "Width", value: $model.outputSize.width, textFieldFocus: textFieldFocus)
                     Text("x")
                         .foregroundStyle(.secondary)
                         .padding(.bottom, 7)
-                    IntegerField(title: "Height", value: $model.outputSize.height)
+                    IntegerField(title: "Height", value: $model.outputSize.height, textFieldFocus: textFieldFocus)
 
                     Button {
                         model.resetOutputSize()
@@ -232,6 +249,7 @@ private struct VideoSettingsSection: View {
                         .textFieldStyle(.roundedBorder)
                         .monospacedDigit()
                         .frame(width: 64)
+                        .inspectorTextField(focus: textFieldFocus)
 
                     Text("x")
                         .foregroundStyle(.secondary)
@@ -336,10 +354,12 @@ private struct AudioSection: View {
 private struct ExportSection: View {
     @ObservedObject var model: AppModel
     @ObservedObject private var exporter: FFmpegExporter
+    var textFieldFocus: FocusState<Bool>.Binding
 
-    init(model: AppModel) {
+    init(model: AppModel, textFieldFocus: FocusState<Bool>.Binding) {
         self.model = model
         self.exporter = model.exporter
+        self.textFieldFocus = textFieldFocus
     }
 
     var body: some View {
@@ -361,6 +381,7 @@ private struct ExportSection: View {
 
             TextField("Video bitrate (optional, e.g. 8M)", text: $model.bitrate)
                 .textFieldStyle(.roundedBorder)
+                .inspectorTextField(focus: textFieldFocus)
 
             HStack {
                 Text(model.outputURL?.path ?? "No output selected")
@@ -434,6 +455,7 @@ private struct FfmpegLogSection: View {
 private struct WaveformSettingsSection: View {
     @ObservedObject var model: AppModel
     @EnvironmentObject private var updateManager: UpdateManager
+    var textFieldFocus: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -473,6 +495,7 @@ private struct WaveformSettingsSection: View {
                         .textFieldStyle(.roundedBorder)
                         .font(.system(.body, design: .monospaced))
                         .frame(width: 90)
+                        .inspectorTextField(focus: textFieldFocus)
                 }
 
                 Button {
@@ -498,6 +521,7 @@ private struct NumberField: View {
     var title: String
     @Binding var value: Double
     var range: ClosedRange<Double>
+    var textFieldFocus: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -506,6 +530,7 @@ private struct NumberField: View {
             TextField(title, value: $value, format: .number.precision(.fractionLength(2)))
                 .textFieldStyle(.roundedBorder)
                 .frame(minWidth: 80)
+                .inspectorTextField(focus: textFieldFocus)
                 .onChange(of: value) { _, newValue in
                     value = min(max(newValue, range.lowerBound), range.upperBound)
                 }
@@ -516,6 +541,7 @@ private struct NumberField: View {
 private struct IntegerField: View {
     var title: String
     @Binding var value: Int
+    var textFieldFocus: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -525,6 +551,7 @@ private struct IntegerField: View {
                 .textFieldStyle(.roundedBorder)
                 .monospacedDigit()
                 .frame(width: 96)
+                .inspectorTextField(focus: textFieldFocus)
                 .onChange(of: value) { _, newValue in
                     value = max(newValue, 1)
                 }
@@ -536,6 +563,7 @@ private struct CropControlRow: View {
     var title: String
     @Binding var value: Int
     var range: ClosedRange<Int>
+    var textFieldFocus: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -547,6 +575,7 @@ private struct CropControlRow: View {
                     .textFieldStyle(.roundedBorder)
                     .monospacedDigit()
                     .frame(width: 96)
+                    .inspectorTextField(focus: textFieldFocus)
             }
 
             HapticSlider(
@@ -572,5 +601,105 @@ private struct CropControlRow: View {
 
     private func clamped(_ newValue: Int) -> Int {
         min(max(newValue, range.lowerBound), range.upperBound)
+    }
+}
+
+private extension View {
+    func inspectorTextField(focus: FocusState<Bool>.Binding) -> some View {
+        focused(focus)
+            .onSubmit {
+                focus.wrappedValue = false
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
+            .onExitCommand {
+                focus.wrappedValue = false
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
+    }
+}
+
+private struct FocusDismissalView: NSViewRepresentable {
+    var onDismiss: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onDismiss: onDismiss)
+    }
+
+    func makeNSView(context: Context) -> FocusDismissalNSView {
+        let view = FocusDismissalNSView()
+        view.onWindowChange = { [weak coordinator = context.coordinator] window in
+            coordinator?.window = window
+        }
+        context.coordinator.startMonitoring()
+        return view
+    }
+
+    func updateNSView(_ nsView: FocusDismissalNSView, context: Context) {
+        context.coordinator.onDismiss = onDismiss
+    }
+
+    static func dismantleNSView(_ nsView: FocusDismissalNSView, coordinator: Coordinator) {
+        coordinator.stopMonitoring()
+    }
+
+    final class Coordinator {
+        var onDismiss: () -> Void
+        weak var window: NSWindow?
+        private var monitor: Any?
+
+        init(onDismiss: @escaping () -> Void) {
+            self.onDismiss = onDismiss
+        }
+
+        deinit {
+            stopMonitoring()
+        }
+
+        func startMonitoring() {
+            guard monitor == nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+                guard let self, let window, event.window === window,
+                      window.firstResponder is NSTextView || window.firstResponder is NSTextField else {
+                    return event
+                }
+
+                let point = window.contentView?.convert(event.locationInWindow, from: nil) ?? .zero
+                let clickedView = window.contentView?.hitTest(point)
+                guard !isTextInput(clickedView) else { return event }
+
+                window.makeFirstResponder(nil)
+                DispatchQueue.main.async {
+                    self.onDismiss()
+                }
+                return event
+            }
+        }
+
+        func stopMonitoring() {
+            if let monitor {
+                NSEvent.removeMonitor(monitor)
+                self.monitor = nil
+            }
+        }
+
+        private func isTextInput(_ view: NSView?) -> Bool {
+            var candidate = view
+            while let current = candidate {
+                if current is NSTextField || current is NSTextView {
+                    return true
+                }
+                candidate = current.superview
+            }
+            return false
+        }
+    }
+}
+
+private final class FocusDismissalNSView: NSView {
+    var onWindowChange: ((NSWindow?) -> Void)?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        onWindowChange?(window)
     }
 }
