@@ -278,18 +278,18 @@ private struct PlaybackControlsView: View {
             .keyboardShortcut(.space, modifiers: [])
             .help(model.isPlaying ? "Pause (K or Space)" : "Play (K or Space)")
             .disabled(model.player == nil)
-
-            Button {
-                model.togglePlayback()
-            } label: {
-                Color.clear
-                    .frame(width: 0, height: 0)
+            .background {
+                Button {
+                    model.togglePlayback()
+                } label: {
+                    EmptyView()
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut("k", modifiers: [])
+                .accessibilityHidden(true)
+                .allowsHitTesting(false)
+                .disabled(model.player == nil)
             }
-            .buttonStyle(.plain)
-            .keyboardShortcut("k", modifiers: [])
-            .accessibilityHidden(true)
-            .allowsHitTesting(false)
-            .disabled(model.player == nil)
 
             Button {
                 model.skipPlayback(by: 10)
