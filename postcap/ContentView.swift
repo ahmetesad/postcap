@@ -265,7 +265,8 @@ private struct PlaybackControlsView: View {
             } label: {
                 Image(systemName: "gobackward.10")
             }
-            .help("Back 10 seconds")
+            .keyboardShortcut("j", modifiers: [])
+            .help("Back 10 seconds (J)")
             .disabled(model.player == nil)
 
             Button {
@@ -275,7 +276,19 @@ private struct PlaybackControlsView: View {
                     .frame(width: 16)
             }
             .keyboardShortcut(.space, modifiers: [])
-            .help(model.isPlaying ? "Pause" : "Play")
+            .help(model.isPlaying ? "Pause (K or Space)" : "Play (K or Space)")
+            .disabled(model.player == nil)
+
+            Button {
+                model.togglePlayback()
+            } label: {
+                Color.clear
+                    .frame(width: 0, height: 0)
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut("k", modifiers: [])
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
             .disabled(model.player == nil)
 
             Button {
@@ -283,7 +296,8 @@ private struct PlaybackControlsView: View {
             } label: {
                 Image(systemName: "goforward.10")
             }
-            .help("Forward 10 seconds")
+            .keyboardShortcut("l", modifiers: [])
+            .help("Forward 10 seconds (L)")
             .disabled(model.player == nil)
 
             Button {
