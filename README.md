@@ -6,7 +6,9 @@ Postcap is a lightweight native macOS app for turning raw screen recordings into
 
 ![Postcap](screenshots/postcap.png)
 
-It exists because the built-in macOS screen recorder has excellent region capture, but does not capture system audio or separate audio tracks. OBS has powerful audio and source control, but it is often annoying for quick region-focused clips and usually still needs post-processing. Full editors like Premiere are overkill when I just want to trim a recording, crop to the important part, fix the audio, and export.
+It exists because the built-in macOS screen recorder has excellent region capture, but does not capture system audio* or separate audio tracks. OBS has powerful audio and source control, but it is often annoying for quick region-focused clips and usually still needs post-processing. Full editors like Premiere are overkill when I just want to trim a recording, crop to the important part, fix the audio, and export.
+
+\* macOS 27 Golden Gate and later adds an **Include System Audio** option to the built-in screen recorder.
 
 With Postcap, you can import a video, trim it, crop to the important region, resize the output, adjust its speed, mute/remove/adjust individual audio tracks such as mic vs system audio, then export through ffmpeg. Hardware-accelerated VideoToolbox encoders are available when supported by the installed ffmpeg build.
 
