@@ -12,6 +12,8 @@ final class AppModel: ObservableObject {
     @Published var player: AVPlayer?
     @Published var videoInfo: VideoInfo?
     @Published var crop = CropSettings()
+    @Published var flipHorizontal = false
+    @Published var flipVertical = false
     @Published var outputSize = OutputSizeSettings()
     @Published var trim = TrimSettings() {
         didSet { applyPreviewSettings() }
@@ -85,6 +87,8 @@ final class AppModel: ObservableObject {
             videoInfo = info
             outputURL = defaultOutputURL(for: url, encoder: encoder)
             crop = CropSettings(x: 0, y: 0, width: info.width, height: info.height, enabled: false)
+            flipHorizontal = false
+            flipVertical = false
             outputSize = OutputSizeSettings(width: info.width, height: info.height, enabled: false)
             trim = TrimSettings(start: 0, end: info.duration, enabled: false)
             exportSpeed = 1
@@ -145,6 +149,8 @@ final class AppModel: ObservableObject {
             bitrate: bitrate,
             speed: exportSpeed,
             crop: crop,
+            flipHorizontal: flipHorizontal,
+            flipVertical: flipVertical,
             outputSize: outputSize,
             trim: trim,
             audioSettings: audioSettings

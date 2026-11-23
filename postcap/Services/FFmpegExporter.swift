@@ -96,6 +96,12 @@ final class FFmpegExporter: ObservableObject {
         if request.crop.enabled {
             videoFilters.append("crop=\(request.crop.width):\(request.crop.height):\(request.crop.x):\(request.crop.y)")
         }
+        if request.flipHorizontal {
+            videoFilters.append("hflip")
+        }
+        if request.flipVertical {
+            videoFilters.append("vflip")
+        }
         if request.outputSize.enabled {
             videoFilters.append("scale=\(request.outputSize.width):\(request.outputSize.height):flags=lanczos")
         }

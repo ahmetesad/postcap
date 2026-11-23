@@ -214,6 +214,10 @@ private struct VideoSettingsSection: View {
                     .padding(.top, 8)
                 }
             }
+
+            Toggle("Flip horizontally", isOn: $model.flipHorizontal)
+            Toggle("Flip vertically", isOn: $model.flipVertical)
+
             Divider()
 
             Toggle("Resize output", isOn: $model.outputSize.enabled)

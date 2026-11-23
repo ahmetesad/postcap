@@ -89,6 +89,8 @@ struct ExportRequest: Equatable {
     var bitrate: String
     var speed: Double
     var crop: CropSettings
+    var flipHorizontal: Bool
+    var flipVertical: Bool
     var outputSize: OutputSizeSettings
     var trim: TrimSettings
     var audioSettings: [Int: AudioTrackSettings]
